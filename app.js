@@ -1,306 +1,336 @@
-const express = require('express');
-const app = express();
+// tailwind.config.ts
+import type { Config } from "tailwindcss";
 
-const landingPage = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHANTOM SENTINEL | AI CYBERSECURITY</title>
-    <style>
-        :root {
-            --bg: #0a0a0a;
-            --fg: #ffffff;
-            --accent: #444;
-            --dither: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIElEQVQImWP8//8/AwXg5cuX/zGADEZGRmSBaAGIBf///wcA968SC9U899oAAAAASUVORK5CYII=');
-        }
+const config: Config = {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        background: "#0a0a0a",
+        foreground: "#ffffff",
+        accent: "#1a1a1a",
+      },
+      fontFamily: {
+        mono: ["JetBrains Mono", "monospace"],
+      },
+    },
+  },
+  plugins: [],
+};
+export default config;
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            border-radius: 0 !important;
-            font-family: 'Courier New', Courier, monospace;
-        }
+// src/app/globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-        body {
-            background-color: var(--bg);
-            color: var(--fg);
-            overflow-x: hidden;
-            font-size: 13px;
-            line-height: 1.4;
-        }
+:root {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+}
 
-        .dither-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: var(--dither);
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 100;
-        }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  overflow-x: hidden;
+}
 
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            border-bottom: 1px solid var(--accent);
-        }
+* {
+  border-radius: 0 !important;
+  border-color: #1a1a1a;
+}
 
-        .logo {
-            font-weight: 900;
-            letter-spacing: -1px;
-            text-transform: uppercase;
-            font-size: 16px;
-        }
+.dither {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIElEQVQImWP8//8/AwXg5cuX/zGADEZGRmSBaAGIBf///wcA968SC9U899oAAAAASUVORK5CYII=");
+  background-repeat: repeat;
+}
 
-        .nav-links a {
-            color: var(--fg);
-            text-decoration: none;
-            margin-left: 25px;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+.dither-overlay {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIElEQVQImWP8//8/AwXg5cuX/zGADEZGRmSBaAGIBf///wcA968SC9U899oAAAAASUVORK5CYII=");
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 9999;
+}
 
-        header {
-            padding: 80px 40px;
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 40px;
-            align-items: center;
-            border-bottom: 1px solid var(--accent);
-        }
+// src/components/ui/Button.tsx
+import React from 'react';
 
-        .hero-content h1 {
-            font-size: 42px;
-            line-height: 0.9;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            font-weight: 800;
-        }
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'outline' | 'ghost';
+  className?: string;
+}
 
-        .hero-content p {
-            max-width: 400px;
-            margin-bottom: 30px;
-            color: #888;
-            font-size: 12px;
-        }
+export const Button = ({ children, variant = 'primary', className = '' }: ButtonProps) => {
+  const baseStyles = "px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] font-bold transition-all duration-100";
+  const variants = {
+    primary: "bg-white text-black hover:bg-zinc-300",
+    outline: "border border-zinc-800 text-white hover:bg-white hover:text-black",
+    ghost: "text-zinc-500 hover:text-white"
+  };
 
-        .btn {
-            background: var(--fg);
-            color: var(--bg);
-            padding: 10px 20px;
-            border: none;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            font-size: 11px;
-        }
+  return (
+    <button className={`${baseStyles} ${variants[variant]} ${className}`}>
+      {children}
+    </button>
+  );
+};
 
-        #coding-canvas {
-            width: 100%;
-            height: 300px;
-            background: #111;
-            border: 1px solid var(--accent);
-            position: relative;
-        }
+// src/components/ui/Navbar.tsx
+import { Button } from './Button';
 
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: 200px;
-            gap: 1px;
-            background: var(--accent);
-            border-bottom: 1px solid var(--accent);
-        }
-
-        .bento-item {
-            background: var(--bg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bento-item:hover {
-            background: #111;
-        }
-
-        .span-2 { grid-column: span 2; }
-        .row-2 { grid-row: span 2; }
-
-        .bento-item h3 {
-            font-size: 12px;
-            text-transform: uppercase;
-            z-index: 2;
-        }
-
-        .bento-item p {
-            font-size: 10px;
-            color: #666;
-            z-index: 2;
-        }
-
-        .illustration {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background-image: var(--dither);
-            opacity: 0.3;
-            mask-image: linear-gradient(to top right, black, transparent);
-        }
-
-        .dither-block {
-            width: 60px;
-            height: 60px;
-            background: #fff;
-            mask-image: var(--dither);
-            margin-bottom: 10px;
-        }
-
-        footer {
-            padding: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #444;
-            text-transform: uppercase;
-        }
-
-        .tag {
-            display: inline-block;
-            padding: 2px 6px;
-            border: 1px solid var(--accent);
-            font-size: 9px;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="dither-overlay"></div>
-    
-    <nav>
-        <div class="logo">PHANTOM_SENTINEL.sys</div>
-        <div class="nav-links">
-            <a href="#">Network</a>
-            <a href="#">Nodes</a>
-            <a href="#">Protocol</a>
-            <a href="#">Terminal</a>
-        </div>
+export const Navbar = () => {
+  return (
+    <nav className="flex items-center justify-between px-6 py-4 border-b border-zinc-900 sticky top-0 bg-background/80 backdrop-blur-sm z-50">
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 bg-white dither"></div>
+        <span className="font-bold tracking-tighter text-sm">PHANTOM.AI</span>
+      </div>
+      <div className="hidden md:flex items-center gap-8 text-[10px] uppercase tracking-widest text-zinc-500">
+        <a href="#" className="hover:text-white transition-colors">Neural_Net</a>
+        <a href="#" className="hover:text-white transition-colors">Encryption</a>
+        <a href="#" className="hover:text-white transition-colors">Nodes</a>
+        <a href="#" className="hover:text-white transition-colors">Terminal</a>
+      </div>
+      <Button variant="outline">Initialize</Button>
     </nav>
+  );
+};
 
-    <header>
-        <div class="hero-content">
-            <div class="tag">SECURE_LAYER_V4.0</div>
-            <h1>NEURAL <br> DEFENSE <br> PROTOCOL.</h1>
-            <p>Autonomous AI security clusters protecting your infrastructure with sub-millisecond dither-encrypted responses.</p>
-            <button class="btn">INITIALIZE SYSTEM</button>
-        </div>
-        <div id="coding-canvas-container">
-            <canvas id="coding-canvas"></canvas>
-        </div>
-    </header>
+// src/components/ui/DitherCoding.tsx
+"use client";
+import React, { useEffect, useRef } from 'react';
 
-    <section class="bento-grid">
-        <div class="bento-item span-2">
-            <h3>Automated Threat Hunting</h3>
-            <p>Scanning 1.2M nodes per second via neural pathways.</p>
-            <div class="illustration"></div>
-        </div>
-        <div class="bento-item">
-            <div class="dither-block"></div>
-            <h3>Zero Trust</h3>
-            <p>Implicit deny by default.</p>
-        </div>
-        <div class="bento-item row-2">
-            <h3>Kernel Protection</h3>
-            <p>Hardware-level AI monitoring for sensitive memory blocks.</p>
-            <div class="illustration" style="width: 100%; height: 60%;"></div>
-        </div>
-        <div class="bento-item">
-            <h3>Dither Encryption</h3>
-            <p>Chaos-pattern bit distribution.</p>
-        </div>
-        <div class="bento-item span-2">
-            <h3>Real-time Forensics</h3>
-            <p>Immediate snapshotting of hostile runtime environments.</p>
-            <div class="illustration" style="width: 50%;"></div>
-        </div>
+export const DitherCoding = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let frame = 0;
+    const chars = "0123456789ABCDEF";
+    
+    const resize = () => {
+      canvas.width = canvas.parentElement?.offsetWidth || 400;
+      canvas.height = 300;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    const draw = () => {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.font = '9px monospace';
+      for (let i = 0; i < 25; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#1a1a1a';
+        const text = Array.from({length: 20}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        const x = 20;
+        const y = 30 + (i * 12);
+        
+        const opacity = Math.sin(frame * 0.05 + i) * 0.5 + 0.5;
+        ctx.globalAlpha = opacity;
+        ctx.fillText(`0x${text}_v${i}`, x, y);
+      }
+
+      // Dither block animation
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#fff';
+      const blockX = (frame * 2) % (canvas.width + 100) - 50;
+      ctx.fillRect(blockX, 150, 40, 40);
+      
+      frame++;
+      requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  return (
+    <div className="relative border border-zinc-900 overflow-hidden bg-zinc-950/50">
+      <canvas ref={canvasRef} className="w-full grayscale brightness-50" />
+      <div className="absolute inset-0 dither pointer-events-none opacity-20"></div>
+      <div className="absolute bottom-2 right-2 text-[8px] text-zinc-700">AESTHETIC_V.01</div>
+    </div>
+  );
+};
+
+// src/components/ui/BentoGrid.tsx
+import React from 'react';
+
+export const BentoCard = ({ title, desc, size = "small", children }: { title: string, desc: string, size?: "small" | "large" | "tall", children?: React.ReactNode }) => {
+  const sizeClasses = {
+    small: "col-span-1 row-span-1",
+    large: "col-span-2 row-span-1",
+    tall: "col-span-1 row-span-2"
+  };
+
+  return (
+    <div className={`border border-zinc-900 p-5 relative overflow-hidden group hover:bg-zinc-950 transition-colors ${sizeClasses[size]}`}>
+      <div className="relative z-10">
+        <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2">{title}</h3>
+        <p className="text-zinc-500 leading-tight text-[10px] max-w-[180px]">{desc}</p>
+      </div>
+      <div className="absolute bottom-0 right-0 opacity-10 group-hover:opacity-20 transition-opacity">
+        {children}
+      </div>
+      <div className="absolute top-0 right-0 w-8 h-8 dither opacity-5 group-hover:opacity-10"></div>
+    </div>
+  );
+};
+
+export const BentoGrid = () => {
+  return (
+    <section className="grid grid-cols-1 md:grid-cols-4 auto-rows-[180px] gap-0 border-t border-l border-zinc-900 mx-6 mb-24">
+      <BentoCard 
+        title="Neural Firewall" 
+        desc="Sub-millisecond latency AI traffic filtering using dithered logic gates."
+        size="large"
+      >
+        <div className="w-32 h-32 bg-white dither" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}></div>
+      </BentoCard>
+      <BentoCard 
+        title="Zero Trust" 
+        desc="Implicitly deny everything. Validate everywhere."
+      >
+        <div className="w-20 h-20 border-4 border-white dither rotate-45"></div>
+      </BentoCard>
+      <BentoCard 
+        title="Ghost Protocol" 
+        desc="Masking infrastructure footprint across the global mesh."
+        size="tall"
+      >
+        <div className="w-full h-full bg-zinc-800 dither"></div>
+      </BentoCard>
+      <BentoCard 
+        title="Threat Intel" 
+        desc="Live feed from 2M+ nodes updated every heartbeat."
+      >
+         <div className="flex gap-1 mt-10">
+            {[1,2,3,4].map(i => <div key={i} className="w-2 h-10 bg-white dither"></div>)}
+         </div>
+      </BentoCard>
+      <BentoCard 
+        title="Kernel Shield" 
+        desc="Hardware-level protection against advanced persistent threats."
+        size="large"
+      >
+        <div className="w-64 h-24 border border-white/20 dither transform skew-x-12"></div>
+      </BentoCard>
     </section>
+  );
+};
 
-    <footer>
-        &copy; 2024 PHANTOM SENTINEL AI - ALL RIGHTS RESERVED - ENCRYPTED BY DITHER_CORE
-    </footer>
+// src/app/layout.tsx
+import "./globals.css";
 
-    <script>
-        const canvas = document.getElementById('coding-canvas');
-        const ctx = canvas.getContext('2d');
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="antialiased selection:bg-white selection:text-black">
+        <div className="dither-overlay"></div>
+        {children}
+      </body>
+    </html>
+  );
+}
 
-        function resize() {
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-        }
-        window.onresize = resize;
-        resize();
+// src/app/page.tsx
+import { Navbar } from "@/components/ui/Navbar";
+import { Button } from "@/components/ui/Button";
+import { DitherCoding } from "@/components/ui/DitherCoding";
+import { BentoGrid } from "@/components/ui/BentoGrid";
 
-        const lines = [];
-        for(let i=0; i<20; i++) {
-            lines.push({
-                x: 20,
-                y: 30 + (i * 15),
-                text: '',
-                full: '0x' + Math.random().toString(16).substr(2, 24).toUpperCase(),
-                speed: Math.random() * 2 + 1
-            });
-        }
+export default function LandingPage() {
+  return (
+    <main className="min-h-screen">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="px-6 py-20 md:py-32 grid md:grid-cols-2 gap-12 border-b border-zinc-900">
+        <div className="flex flex-col justify-center">
+          <div className="inline-flex items-center gap-2 px-2 py-1 border border-zinc-800 w-fit mb-6">
+            <span className="w-1.5 h-1.5 bg-white animate-pulse"></span>
+            <span className="text-[9px] uppercase tracking-tighter text-zinc-400">System Status: Operational</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.85] mb-8 uppercase">
+            Neural <br /> Defensive <br /> Logic.
+          </h1>
+          <p className="text-zinc-500 text-[11px] max-w-sm mb-10 leading-relaxed uppercase tracking-tight">
+            Next-generation autonomous cybersecurity for high-risk infrastructure. 
+            Utilizing dither-encrypted neural weights to predict and neutralize threats 
+            before they reach the application layer.
+          </p>
+          <div className="flex gap-4">
+            <Button>Deploy Node</Button>
+            <Button variant="ghost">View Documentation</Button>
+          </div>
+        </div>
+        <div className="flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <DitherCoding />
+          </div>
+        </div>
+      </section>
 
-        function draw() {
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.font = '10px "Courier New"';
-            
-            lines.forEach((line, i) => {
-                if (line.text.length < line.full.length) {
-                    line.text = line.full.substr(0, line.text.length + 1);
-                } else {
-                    if (Math.random() > 0.98) line.text = '';
-                }
+      {/* Stats Line */}
+      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-zinc-900">
+        {[
+          ["Uptime", "99.999%"],
+          ["Nodes", "4,102"],
+          ["Threats", "12.4M/Day"],
+          ["Latency", "< 0.4ms"]
+        ].map(([label, val]) => (
+          <div key={label} className="p-6 border-r border-zinc-900 last:border-r-0">
+            <p className="text-[9px] text-zinc-600 uppercase mb-1 tracking-widest">{label}</p>
+            <p className="text-sm font-bold font-mono">{val}</p>
+          </div>
+        ))}
+      </div>
 
-                ctx.fillStyle = i % 2 === 0 ? '#444' : '#888';
-                ctx.fillText(line.text, line.x, line.y);
-                
-                // Dithered square animation
-                if (Math.random() > 0.9) {
-                    ctx.fillStyle = '#222';
-                    ctx.fillRect(canvas.width - 100 + (Math.random()*80), line.y - 10, 5, 5);
-                }
-            });
+      {/* Bento Section */}
+      <section className="py-24">
+        <div className="px-6 mb-12 flex justify-between items-end">
+          <div>
+            <h2 className="text-2xl font-bold uppercase tracking-tighter">Capabilities</h2>
+            <p className="text-zinc-600 text-[10px] uppercase">Hardware-software integrated security</p>
+          </div>
+          <div className="text-[9px] text-zinc-800 text-right">PH_SENTINEL_CORE_V.2.0.4</div>
+        </div>
+        <BentoGrid />
+      </section>
 
-            requestAnimationFrame(draw);
-        }
-        draw();
-    </script>
-</body>
-</html>
-`;
-
-app.get('/', (req, res) => {
-  res.send(landingPage);
-});
-
-app.get('/health', (req, res) => {
-  res.json({ msg: 'ok' });
-});
-
-app.listen(3000, () => {
-    console.log('Phantom Sentinel System Online on Port 3000');
-});
+      {/* Footer */}
+      <footer className="px-6 py-12 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-zinc-800 dither"></div>
+          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">© 2024 Phantom Sentinel AI</span>
+        </div>
+        <div className="flex gap-8 text-zinc-700 text-[9px] uppercase tracking-widest">
+          <a href="#" className="hover:text-white">Github</a>
+          <a href="#" className="hover:text-white">X.com</a>
+          <a href="#" className="hover:text-white">Whitepaper</a>
+          <a href="#" className="hover:text-white">Legal</a>
+        </div>
+        <div className="text-zinc-800 text-[9px]">
+          ENCRYPTED_BY_DITHER_V1
+        </div>
+      </footer>
+    </main>
+  );
+}
